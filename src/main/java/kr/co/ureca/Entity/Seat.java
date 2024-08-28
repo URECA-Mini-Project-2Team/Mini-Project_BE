@@ -26,6 +26,6 @@ public class Seat {
     @OneToOne
     private User user;
 
-    private Long SeatNo;
+    private Long seatNo;
 
 }
