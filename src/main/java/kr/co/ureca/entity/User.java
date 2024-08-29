@@ -24,5 +24,5 @@ public class User {
     private String password;
 
     @Column(name = "hasreservation")
-    private boolean hasReservation;
+    private Boolean hasReservation;
 }
