@@ -1,9 +1,11 @@
 package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "seat")
+@Data
 public class Seat {
 
     @Id
