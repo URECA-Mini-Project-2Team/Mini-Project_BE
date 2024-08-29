@@ -5,11 +5,11 @@ import lombok.Data;
 @Data
 public class SeatDto {
 
-    private Long seatId;
-
-    private Long userId;
-
     private Long seatNo;
 
     private Boolean status;
+
+    private String nickName;
+
+    private String userName;
 }
