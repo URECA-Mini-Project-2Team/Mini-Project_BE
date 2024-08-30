@@ -1,4 +1,4 @@
-package kr.co.ureca.Entity;
+package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
 import jdk.jfr.Description;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Seat {
