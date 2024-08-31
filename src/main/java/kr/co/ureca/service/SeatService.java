@@ -1,14 +1,18 @@
 package kr.co.ureca.service;
 
 import kr.co.ureca.dto.SeatDto;
+import kr.co.ureca.dto.UserDto;
 import kr.co.ureca.entity.Seat;
+import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeatService {
@@ -35,4 +39,23 @@ public class SeatService {
         return list;
     }
 
+    public ResponseEntity deleteSeat(UserDto userDto) throws Exception {
+        Optional<User> optionalUser = userRepository.findOpByNickName(userDto.getNickName());
+        if (optionalUser.isEmpty()) throw new Exception("등록되지 않은 사용자입니다.");
+
+        User user = optionalUser.get();
+        if (!user.getPassword().equals(userDto.getPassword())) throw new Exception("비밀번호가 틀렸습니다.");
+        if (!user.getHasReservation()) throw new Exception("등록된 자리가 없습니다.");
+
+        Seat seat = seatRepository.findById(user.getSeatId()).get();
+        seat.setUserId(null);
+        seat.setStatus(false);
+        seatRepository.save(seat);
+
+        user.setHasReservation(false);
+        user.setSeatId(null);
+        userRepository.save(user);
+
+        return ResponseEntity.ok().build();
+    }
 }
