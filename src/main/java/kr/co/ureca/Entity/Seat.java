@@ -24,6 +24,7 @@ public class Seat {
     private Boolean status = false;
 
     @OneToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     private Long seatNo;

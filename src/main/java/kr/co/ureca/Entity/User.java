@@ -19,10 +19,6 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne(mappedBy = "user")
-    @JoinColumn(name = "seat_id")
-    private Seat seat;
-
     private String userName;
     private String password;
 

@@ -3,6 +3,7 @@ package kr.co.ureca.service;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import kr.co.ureca.dto.DeleteReservationRequest;
 import kr.co.ureca.dto.ReservationRequest;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
@@ -14,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -61,20 +60,20 @@ public class ReservationService {
             throw new CustomException(ErrorCode.RESERVED_USER, HttpStatus.BAD_REQUEST);
         }
 
+        user = user.toBuilder()
+                .hasReservation(true)
+                .build();
+
         seat = seat.toBuilder()
                 .user(user)
                 .status(true)
                 .build();
 
-        user = user.toBuilder()
-                .seat(seat)
-                .build();
-
         userRepository.save(user);
-//        seatRepository.save(seat); 더티체킹
+        seatRepository.save(seat);
 
         return seat;
 
     }
-
+    
 }
