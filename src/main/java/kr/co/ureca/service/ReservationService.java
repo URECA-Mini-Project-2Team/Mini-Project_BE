@@ -75,5 +75,38 @@ public class ReservationService {
         return seat;
 
     }
+
+    @Transactional
+    public Seat deleteReservation(DeleteReservationRequest deleteReservationRequest){
+        Seat seat = seatRepository.findBySeatNo(deleteReservationRequest.seatNo())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 좌석입니다. 좌석번호: " + deleteReservationRequest.seatNo()));
+        User user = seat.getUser();
+        String nickName = deleteReservationRequest.nickname();
+        String userName = deleteReservationRequest.userName();
+        String password = deleteReservationRequest.password();
+
+        if(seat.getStatus().equals(true)) {
+            if (user.getNickName().equals(nickName)
+                    && user.getUserName().equals(userName)
+                    && user.getPassword().equals(password)) {
+                seat = seat.toBuilder()
+                        .user(null)
+                        .status(false)
+                        .build();
+                user = user.toBuilder()
+                        .hasReservation(false)
+                        .build();
+
+                seatRepository.save(seat);
+                userRepository.save(user);
+            } else {
+                throw new CustomException(ErrorCode.UNAUTHORIZED_USER, HttpStatus.BAD_REQUEST);
+            }
+        }else{
+            throw new CustomException(ErrorCode.UNVALID_DELETE_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+
+        return seat;
+    }
     
 }
