@@ -1,17 +1,25 @@
 package kr.co.ureca.service;
 
+import kr.co.ureca.dto.ReservationDto;
 import kr.co.ureca.dto.SeatDto;
+import kr.co.ureca.dto.UserDto;
 import kr.co.ureca.entity.Seat;
+import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeatService {
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private SeatRepository seatRepository;
@@ -65,9 +73,6 @@ public class SeatService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity deleteSeat(UserDto userDto) {
-        return ResponseEntity.badRequest().build();
-    }
     public ResponseEntity deleteSeat(UserDto userDto) throws Exception {
         Optional<User> optionalUser = userRepository.findOpByNickName(userDto.getNickName());
         if (optionalUser.isEmpty()) throw new Exception("등록되지 않은 사용자입니다.");
