@@ -1,5 +1,6 @@
 package kr.co.ureca.service;
 
+import kr.co.ureca.dto.DeleteReservationRequest;
 import kr.co.ureca.dto.ReservationRequest;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,7 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -40,6 +43,9 @@ public class ReservationServiceTest {
     ReservationService reservationService;
 
     private ReservationRequest request;
+
+    @Captor
+    private ArgumentCaptor<User> userCaptor;
 
     @BeforeEach
     void setUp() {
@@ -108,5 +114,35 @@ public class ReservationServiceTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.RESERVED_USER);
         verify(mockUserRepository, never()).save(any(User.class));
         verify(mockSeatRepository, never()).save(any(Seat.class));
+    }
+
+    @Test
+    @DisplayName("삭제 성공")
+    void deleteReservationSuccess() {
+        // Given
+        DeleteReservationRequest request = new DeleteReservationRequest("userName", "1111", "userNickname", 1L);
+        User user = User.builder()
+                .nickName("userNickname")
+                .userName("userName")
+                .hasReservation(true)
+                .password("1111")
+                .build();
+        Seat seat = Seat.builder().seatNo(1L).user(user).status(true).build();
+
+        when(mockSeatRepository.findBySeatNo(eq(1L))).thenReturn(Optional.of(seat));
+
+        // When
+        Seat deletedSeat = reservationService.deleteReservation(request);
+
+        // Then
+        verify(mockUserRepository).save(userCaptor.capture());
+        User capturedUser = userCaptor.getValue();
+
+        assertNull(deletedSeat.getUser());
+        assertFalse(deletedSeat.getStatus());
+        assertThat(capturedUser.getHasReservation()).isFalse();
+
+        verify(mockSeatRepository, times(1)).findBySeatNo(eq(1L));
+        verify(mockSeatRepository, times(1)).save(deletedSeat);
     }
 }
