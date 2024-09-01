@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Seat Reservation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<!-- Navigation bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Seat Reservation</a>
+</nav>
+
+<div class="container mt-4">
+    <!-- User Info Form: Displayed only if user information is not present -->
+    <div th:if="${user == null}" class="mb-4">
+        <h3>User Information</h3>
+        <form th:action="@{/ureca}" method="post">
+            <div class="form-group">
+                <label for="userName">User Name</label>
+                <input type="text" class="form-control" id="userName" name="userName" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="nickName">Nick Name</label>
+                <input type="text" class="form-control" id="nickName" name="nickName" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <!-- Display a welcome message if the user is logged in -->
+    <div th:if="${user != null}" class="mb-4">
+        <h3>Welcome, <span th:text="${user.nickName}">User</span>!</h3>
+    </div>
+
+    <!-- Generate 30 Seats -->
+    <div class="row">
+        <div th:each="seat : ${seats}" class="col-md-2 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="'Seat ' + ${seat.seatNo}">Seat 1</h5>
+                    <p class="card-text" th:if="${seat.user != null}">
+                        <span th:text="'Reserved by: ' + ${seat.user.nickName}"></span><br>
+                        <span th:text="'User: ' + ${seat.user.userName}"></span>
+                    </p>
+                    <p class="card-text" th:if="${seat.user == null}">
+                        <span>Available</span>
+                    </p>
+                    <button class="btn btn-primary"
+                            th:disabled="${seat.user != null}"
+                            onclick="selectSeat([[${seat.id}]])">Select Seat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectSeat(seatId) {
+        $.ajax({
+            url: '/ureca/reservation', // 경로가 맞는지 확인하세요
+            type: 'PATCH',
+            data: { seatId: seatId },
+            success: function(response) {
+                alert(response); // 서버에서 반환하는 메시지를 알림으로 표시
+                location.reload(); // 페이지를 새로고침하여 변경 사항 반영
+            },
+            error: function(xhr) {
+                alert('Error: ' + xhr.responseText); // 오류 메시지를 알림으로 표시
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
