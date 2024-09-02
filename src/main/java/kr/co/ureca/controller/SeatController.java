@@ -3,7 +3,10 @@ package kr.co.ureca.controller;
 import kr.co.ureca.dto.ReservationDto;
 import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.dto.UserDto;
+import kr.co.ureca.entity.Seat;
+import kr.co.ureca.entity.User;
 import kr.co.ureca.service.SeatService;
+import kr.co.ureca.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +19,8 @@ public class SeatController {
 
     @Autowired
     private SeatService seatService;
+    @Autowired
+    private UserService userService;
 
     @GetMapping()
     public ResponseEntity<List<SeatDto>> getSeatList() {
@@ -24,12 +29,18 @@ public class SeatController {
     }
 
     @PatchMapping("/reservation")
-    public ResponseEntity reservationSeat(@RequestBody ReservationDto reservationDto) throws Exception {
-        return seatService.reservationSeat(reservationDto);
+    public ResponseEntity<Void> reservationSeat(@RequestBody ReservationDto reservationDto) throws Exception {
+        User user = userService.checkExistOrNot(reservationDto);
+        Seat seat = seatService.reservationSeat(reservationDto, user);
+        userService.setUserSeat(user, seat);
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/delete")
-    public ResponseEntity deleteSeat(@RequestBody UserDto userDto) throws Exception {
-        return seatService.deleteSeat(userDto);
+    public ResponseEntity<Void> deleteSeat(@RequestBody UserDto userDto) throws Exception {
+        User user = userService.checkExistOrNot(userDto);
+        Seat seat = seatService.deleteSeat(user);
+        userService.setUserSeat(user, seat);
+        return ResponseEntity.ok().build();
     }
 }
