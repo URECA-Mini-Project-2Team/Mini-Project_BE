@@ -7,7 +7,6 @@ import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
