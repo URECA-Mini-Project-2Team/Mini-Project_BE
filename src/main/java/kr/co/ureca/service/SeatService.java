@@ -15,9 +15,6 @@ import java.util.List;
 public class SeatService {
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private SeatRepository seatRepository;
 
     public List<SeatDto> getSeatList() {
@@ -28,7 +25,8 @@ public class SeatService {
             seatDto.setSeatNo(seat.getSeatNo());
             seatDto.setStatus(seat.getStatus());
             if (seatDto.getStatus()) {
-                seatDto = userService.setSeatDto(seatDto, seat);
+                seatDto.setNickName(seat.getUser().getNickName());
+                seatDto.setUserName(seat.getUser().getUserName());
             }
             list.add(seatDto);
         }
@@ -40,15 +38,15 @@ public class SeatService {
         if (seat.getStatus()) throw new Exception("이미 예약된 좌석입니다.");
 
         seat.setStatus(true);
-        seat.setUserId(user.getUserId());
+        seat.setUser(user);
         seatRepository.save(seat);
 
         return seat;
     }
 
-    public Seat deleteSeat(User user) throws Exception {
-        Seat seat = seatRepository.findById(user.getSeatId()).get();
-        seat.setUserId(null);
+    public Seat deleteSeat(User user) {
+        Seat seat = seatRepository.findById(user.getSeat().getSeatId()).get();
+        seat.setUser(null);
         seat.setStatus(false);
         seatRepository.save(seat);
 

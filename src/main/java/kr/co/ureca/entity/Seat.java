@@ -13,8 +13,9 @@ public class Seat {
     @Column(name = "seatid")
     private Long seatId;
 
-    @Column(name = "userid")
-    private Long userId;
+    @JoinColumn(name = "userid")
+    @OneToOne
+    private User user;
 
     @Column(name = "seatno")
     private Long seatNo;

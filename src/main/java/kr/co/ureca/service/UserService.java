@@ -21,12 +21,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public SeatDto setSeatDto(SeatDto seatDto, Seat seat) {
-        seatDto.setNickName(userRepository.findById(seat.getUserId()).get().getNickName());
-        seatDto.setUserName(userRepository.findById(seat.getUserId()).get().getUserName());
-        return seatDto;
-    }
-
     public User checkExistOrNot(ReservationDto reservationDto) throws Exception {
         Optional<User> userOptional = userRepository.findOpByNickName(reservationDto.getNickName());
         User user;
@@ -59,14 +53,12 @@ public class UserService {
     public void setUserSeat(User user, Seat seat) {
         if (seat.getStatus()) {
             user.setHasReservation(true);
-            user.setSeatId(seat.getSeatId());
+            user.setSeat(seat);
             userRepository.save(user);
         } else {
             user.setHasReservation(false);
-            user.setSeatId(null);
+            user.setSeat(null);
             userRepository.save(user);
         }
     }
-
-
 }

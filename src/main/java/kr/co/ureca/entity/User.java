@@ -13,10 +13,11 @@ public class User {
     @Column(name = "userid")
     private Long userId;
 
-    @Column(name = "seatid")
-    private Long seatId;
+    @JoinColumn(name = "seatid")
+    @OneToOne
+    private Seat seat;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
     private String userName;
 
     @Column(name = "nickname")
