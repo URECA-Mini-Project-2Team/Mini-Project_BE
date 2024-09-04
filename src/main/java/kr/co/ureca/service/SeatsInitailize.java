@@ -14,9 +14,9 @@ public class SeatsInitailize {
 
     @PostConstruct
     public void init(){
-        for(int i = 1; i <= 30; i++){
+        for(long i = 1; i <= 30; i++){
             Seat seat = new Seat();
-            seat.setSeatNo("S" + i);
+            seat.setSeatNo(i);
             seat.setStatus(false);
             seatRepository.save(seat);
         }

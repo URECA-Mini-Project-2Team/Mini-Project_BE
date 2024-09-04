@@ -10,4 +10,5 @@ public class MiniProjectBeApplication {
         SpringApplication.run(MiniProjectBeApplication.class, args);
     }
 
+
 }

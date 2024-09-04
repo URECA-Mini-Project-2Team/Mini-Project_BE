@@ -9,10 +9,13 @@ import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -24,13 +27,14 @@ public class ReservationService {
     @Autowired
     private final SeatRepository seatRepository;
 
+    private final ReentrantLock lock = new ReentrantLock();
 
     public List<SeatDto> getAllSeats() {
         List<Seat> seats = seatRepository.findAll();
 
         return seats.stream().map(seat -> {
             SeatDto dto = new SeatDto();
-            dto.setSeatNo(seat.getId());
+            dto.setSeatNo(seat.getSeatNo());
             dto.setStatus(seat.isStatus());
             if(seat.getUser() != null){
                 dto.setNickName(seat.getUser().getNickName());
@@ -49,56 +53,68 @@ public class ReservationService {
 //        return userRepository.save(user);
 //    }
     public boolean selectSeatToUser(ReservationRequestDto reservationRequestDto) {
-        Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
-                .orElse(null);
+        lock.lock();
+        try {
+            Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
+                    .orElseThrow(()-> new RuntimeException("Seat not found"));
 
-        if(seat == null || seat.isStatus()){
-            return false;
+//            if(seat == null || seat.isStatus()){
+//                return false;
+//            }
+            if(seat == null){
+                System.out.println("Seat not found");
+                return false;
+            }
+            if(seat.isStatus()){
+                System.out.println("Seat already reserved");
+                return false;
+            }
+            User user = new User();
+            user.setUserName(reservationRequestDto.getUserName());
+            user.setNickName(reservationRequestDto.getNickName());
+            user.setPassword(reservationRequestDto.getPassword());
+            user.setHasReservation(true);
+            user.setSeat(seat);
+            seat.setStatus(true);
+
+            userRepository.save(user);
+            seatRepository.save(seat);
+
+            return true;
+        } finally {
+            lock.unlock();
         }
-
-        User user = new User();
-        user.setUserName(reservationRequestDto.getUserName());
-        user.setNickName(reservationRequestDto.getNickName());
-        user.setPassword(reservationRequestDto.getPassword());
-        user.setHasReservation(true);
-        user.setSeat(seat);
-        seat.setStatus(true);
-
-        userRepository.save(user);
-        seatRepository.save(seat);
-
-        return true;
 
     }
 
-    public boolean deleteSeat(ReservationDeleteDto reservationDeleteDto){
+    public boolean deleteSeat(ReservationDeleteDto reservationDeleteDto) throws Exception {
         /*
         예약된 좌석을 클릭했을 때, 사용자 정보 일부를 입력 받아 해당 좌석의 예약자와 일치 여부를 판단
         -> 일치하면 예약 취소
         -> 일치하지 않으면 --
          */
         Optional<User> userOpt = userRepository.findByNickName(reservationDeleteDto.getNickName());
+        if(userOpt.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "등록된 유저가 아닙니다.");
 
-        if(userOpt.isPresent()){
-            User user = userOpt.get();
-
-            if(user.getPassword().equals(reservationDeleteDto.getPassword()) && user.isHasReservation()){
-
-                Seat seat = seatRepository.findById(user.getSeat().getId())
-                        .orElse(null);
-
-                seat.setUser(null);
-                seat.setStatus(false);
-                seatRepository.save(seat);
-
-                user.setHasReservation(false);
-                user.setSeat(null);
-                userRepository.save(user);
-
-                return true;
-            }
+        User user = userOpt.get();
+        if(!user.getPassword().equals(reservationDeleteDto.getPassword())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"비밀번호를 확인해주세요.");
         }
+        if(!user.isHasReservation()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"예약된 좌석이 없습니다.");
+        }
+        Seat seat = seatRepository.findById(user.getSeat().getId())
+                .orElseThrow(() -> new RuntimeException("Seat not found"));
 
-        return false;
+        seat.setUser(null);
+        seat.setStatus(false);
+        seatRepository.save(seat);
+
+        user.setHasReservation(false);
+        user.setSeat(null);
+        userRepository.save(user);
+
+        return true;
+
     }
 }

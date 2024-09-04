@@ -13,12 +13,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/ureca")
+@RequestMapping("/")
 public class ReservationController {
 
     private final ReservationService reservationService;
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<SeatDto>> getSeatList(){
         List<SeatDto> seats = reservationService.getAllSeats();
         return new ResponseEntity<>(seats,HttpStatus.OK);
@@ -42,7 +42,7 @@ public class ReservationController {
     }
 
     @PatchMapping("/delete")
-    public ResponseEntity<String> deleteSeat(@RequestBody ReservationDeleteDto reservationDeleteDto){
+    public ResponseEntity<String> deleteSeat(@RequestBody ReservationDeleteDto reservationDeleteDto) throws Exception {
         boolean success = reservationService.deleteSeat(reservationDeleteDto);
 
         if(success){
