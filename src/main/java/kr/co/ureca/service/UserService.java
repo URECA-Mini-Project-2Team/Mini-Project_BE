@@ -1,7 +1,6 @@
 package kr.co.ureca.service;
 
 import kr.co.ureca.dto.ReservationDto;
-import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.dto.UserDto;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
@@ -14,8 +13,12 @@ import java.util.Optional;
 @Service
 public class UserService {
 
+    private final UserRepository userRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public void register(User user) {
         userRepository.save(user);
@@ -29,11 +32,11 @@ public class UserService {
             if (!user.getPassword().equals(reservationDto.getPassword())) throw new Exception("비밀번호가 틀렸습니다.");
             if (user.getHasReservation()) throw new Exception("이미 선택한 좌석이 있습니다.");
         } else { // User가 없어서 새로 생성
-            user = new User();
-            user.setNickName(reservationDto.getNickName());
-            user.setUserName(reservationDto.getUserName());
-            user.setPassword(reservationDto.getPassword());
-            user.setHasReservation(false);
+            user = User.builder()
+                    .nickName(reservationDto.getNickName())
+                    .userName(reservationDto.getUserName())
+                    .password(reservationDto.getPassword())
+                    .build();
             register(user);
         }
 
@@ -52,12 +55,10 @@ public class UserService {
 
     public void setUserSeat(User user, Seat seat) {
         if (seat.getStatus()) {
-            user.setHasReservation(true);
-            user.setSeat(seat);
+            user.updateUserReservation(seat, true);
             userRepository.save(user);
         } else {
-            user.setHasReservation(false);
-            user.setSeat(null);
+            user.updateUserReservation(null, false);
             userRepository.save(user);
         }
     }

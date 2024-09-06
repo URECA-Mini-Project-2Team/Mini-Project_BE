@@ -18,10 +18,16 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class SeatController {
 
+
+    private final SeatService seatService;
+
+    private final UserService userService;
+
     @Autowired
-    private SeatService seatService;
-    @Autowired
-    private UserService userService;
+    public SeatController(SeatService seatService, UserService userService) {
+        this.seatService = seatService;
+        this.userService = userService;
+    }
 
     @GetMapping()
     public ResponseEntity<List<SeatDto>> getSeatList() {

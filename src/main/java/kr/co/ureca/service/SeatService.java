@@ -14,8 +14,12 @@ import java.util.List;
 @Service
 public class SeatService {
 
+    private final SeatRepository seatRepository;
+
     @Autowired
-    private SeatRepository seatRepository;
+    public SeatService(SeatRepository seatRepository) {
+        this.seatRepository = seatRepository;
+    }
 
     public List<SeatDto> getSeatList() {
         List<Seat> seats = seatRepository.findAll();
@@ -37,8 +41,7 @@ public class SeatService {
         Seat seat = seatRepository.findBySeatNo(reservationDto.getSeatNo());
         if (seat.getStatus()) throw new Exception("이미 예약된 좌석입니다.");
 
-        seat.setStatus(true);
-        seat.setUser(user);
+        seat.updateSeatReservation(user, true);
         seatRepository.save(seat);
 
         return seat;
@@ -46,8 +49,7 @@ public class SeatService {
 
     public Seat deleteSeat(User user) {
         Seat seat = seatRepository.findById(user.getSeat().getSeatId()).get();
-        seat.setUser(null);
-        seat.setStatus(false);
+        seat.updateSeatReservation(null, false);
         seatRepository.save(seat);
 
         return seat;
