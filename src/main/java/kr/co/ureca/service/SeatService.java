@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeatService {
@@ -47,11 +48,17 @@ public class SeatService {
         return seat;
     }
 
-    public Seat deleteSeat(User user) {
-        Seat seat = seatRepository.findById(user.getSeat().getSeatId()).get();
-        seat.updateSeatReservation(null, false);
-        seatRepository.save(seat);
+    public Seat deleteSeat(User user) throws Exception {
+        Optional<Seat> seatOptional = seatRepository.findById(user.getSeat().getSeatId());
 
-        return seat;
+        if (seatOptional.isPresent()) {
+            Seat seat = seatOptional.get();
+            seat.updateSeatReservation(null, false);
+            seatRepository.save(seat);
+
+            return seat;
+        }
+
+        else throw new Exception("자리가 존재하지 않습니다.");
     }
 }
