@@ -1,11 +1,15 @@
 package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "user")
-@Data
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class User {
 
     @Id
@@ -27,5 +31,11 @@ public class User {
     private String password;
 
     @Column(name = "hasreservation")
+    @ColumnDefault("false")
     private Boolean hasReservation;
+
+    public void updateUserReservation(Seat seat, Boolean hasReservation) {
+        this.seat = seat;
+        this.hasReservation = hasReservation;
+    }
 }

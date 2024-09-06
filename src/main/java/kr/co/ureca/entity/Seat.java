@@ -1,11 +1,15 @@
 package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "seat")
-@Data
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Seat {
 
     @Id
@@ -17,9 +21,15 @@ public class Seat {
     @OneToOne
     private User user;
 
-    @Column(name = "seatno")
+    @Column(name = "seatno", nullable = false)
     private Long seatNo;
 
     @Column(name = "status")
+    @ColumnDefault("false")
     private Boolean status;
+
+    public void updateSeatReservation(User user, Boolean status) {
+        this.user = user;
+        this.status = status;
+    }
 }
