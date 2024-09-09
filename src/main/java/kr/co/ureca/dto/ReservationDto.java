@@ -1,8 +1,10 @@
 package kr.co.ureca.dto;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 
-@Data
+@Getter
+@Builder
 public class ReservationDto {
 
     private String userName;

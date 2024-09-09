@@ -1,8 +1,10 @@
 package kr.co.ureca.dto;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 
-@Data
+@Getter
+@Builder
 public class SeatDto {
 
     private Long seatNo;
@@ -12,4 +14,5 @@ public class SeatDto {
     private String nickName;
 
     private String userName;
+
 }
