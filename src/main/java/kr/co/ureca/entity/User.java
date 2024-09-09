@@ -2,10 +2,9 @@ package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 @Entity
-@Table(name = "user")
+@Table(name = "userdb")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -17,25 +16,13 @@ public class User {
     @Column(name = "userid")
     private Long userId;
 
-    @JoinColumn(name = "seatid")
-    @OneToOne
-    private Seat seat;
-
-    @Column(name = "username", unique = true)
+    @Column(name = "username", nullable = false)
     private String userName;
 
-    @Column(name = "nickname")
+    @Column(name = "nickname", unique = true, nullable = false)
     private String nickName;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "hasreservation")
-    @ColumnDefault("false")
-    private Boolean hasReservation;
-
-    public void updateUserReservation(Seat seat, Boolean hasReservation) {
-        this.seat = seat;
-        this.hasReservation = hasReservation;
-    }
 }
