@@ -23,4 +23,8 @@ public class Seat {
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
 
+    public void updateUser(User user) {
+        this.user = user;
+    }
+
 }
