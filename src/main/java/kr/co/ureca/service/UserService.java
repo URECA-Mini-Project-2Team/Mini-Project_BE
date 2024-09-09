@@ -2,7 +2,6 @@ package kr.co.ureca.service;
 
 import kr.co.ureca.dto.ReservationDto;
 import kr.co.ureca.dto.UserDto;
-import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ public class UserService {
         if (userOptional.isPresent()) { // User가 이미 있음
             user = userOptional.get();
             if (!user.getPassword().equals(reservationDto.getPassword())) throw new Exception("비밀번호가 틀렸습니다.");
-            if (user.getHasReservation()) throw new Exception("이미 선택한 좌석이 있습니다.");
         } else { // User가 없어서 새로 생성
             user = User.builder()
                     .nickName(reservationDto.getNickName())
@@ -48,18 +46,7 @@ public class UserService {
         if (optionalUser.isEmpty()) throw new Exception("등록되지 않은 사용자입니다.");
         User user = optionalUser.get();
         if (!user.getPassword().equals(userDto.getPassword())) throw new Exception("비밀번호가 틀렸습니다.");
-        if (!user.getHasReservation()) throw new Exception("등록된 자리가 없습니다.");
 
         return user;
-    }
-
-    public void setUserSeat(User user, Seat seat) {
-        if (seat.getStatus()) {
-            user.updateUserReservation(seat, true);
-            userRepository.save(user);
-        } else {
-            user.updateUserReservation(null, false);
-            userRepository.save(user);
-        }
     }
 }

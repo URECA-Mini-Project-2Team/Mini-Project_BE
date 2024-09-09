@@ -18,7 +18,6 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class SeatController {
 
-
     private final SeatService seatService;
 
     private final UserService userService;
@@ -39,7 +38,6 @@ public class SeatController {
     public ResponseEntity<Void> reservationSeat(@RequestBody ReservationDto reservationDto) throws Exception {
         User user = userService.checkExistOrNot(reservationDto);
         Seat seat = seatService.reservationSeat(reservationDto, user);
-        userService.setUserSeat(user, seat);
         return ResponseEntity.ok().build();
     }
 
@@ -47,7 +45,6 @@ public class SeatController {
     public ResponseEntity<Void> deleteSeat(@RequestBody UserDto userDto) throws Exception {
         User user = userService.checkExistOrNot(userDto);
         Seat seat = seatService.deleteSeat(user);
-        userService.setUserSeat(user, seat);
         return ResponseEntity.ok().build();
     }
 }
