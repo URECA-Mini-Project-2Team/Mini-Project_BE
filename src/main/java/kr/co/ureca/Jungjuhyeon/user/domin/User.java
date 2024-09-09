@@ -27,7 +27,7 @@ public class User {
 
     private String password;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(fetch = FetchType.LAZY,mappedBy = "user")
     private Seat seat;
 
     @Enumerated(EnumType.STRING)
