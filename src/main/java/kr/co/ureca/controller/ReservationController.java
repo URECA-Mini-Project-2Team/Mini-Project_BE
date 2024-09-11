@@ -26,7 +26,7 @@ public class ReservationController {
             @ApiResponse(responseCode = "200", description = "예약 성공"),
             @ApiResponse(responseCode = "400", description = "예약 실패")
     })
-    @PatchMapping("/ureca")
+    @PatchMapping("/ureca/reservation")
     public ResponseEntity<Seat> reservation(ReservationRequest reservationRequest){
         Seat reservatedSeat = reservationService.reserve(reservationRequest);
         return new ResponseEntity<>(reservatedSeat, HttpStatus.OK);
