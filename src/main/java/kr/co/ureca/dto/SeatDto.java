@@ -6,7 +6,7 @@ import lombok.Data;
 public class SeatDto {
 
     private Long seatNo;
-    private boolean status;
+    private Boolean status;
     private String nickName;
     private String userName;
 }

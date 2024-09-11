@@ -8,11 +8,10 @@ import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,11 +19,12 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
+
 public class ReservationService {
 
-    @Autowired
+
     private final UserRepository userRepository;
-    @Autowired
     private final SeatRepository seatRepository;
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -35,7 +35,7 @@ public class ReservationService {
         return seats.stream().map(seat -> {
             SeatDto dto = new SeatDto();
             dto.setSeatNo(seat.getSeatNo());
-            dto.setStatus(seat.isStatus());
+            dto.setStatus(seat.getStatus());
             if(seat.getUser() != null){
                 dto.setNickName(seat.getUser().getNickName());
                 dto.setUserName(seat.getUser().getUserName());
@@ -43,18 +43,10 @@ public class ReservationService {
             return dto;
         }).collect(Collectors.toList());
     }
-
-//    public User saveUser(UserInfoDto userInfoDto){
-//        User user = new User();
-//        user.setUserName(userInfoDto.getUserName());
-//        user.setPassword(userInfoDto.getPassword());
-//        user.setNickName(userInfoDto.getNickName());
-//        user.setHasReservation(false);
-//        return userRepository.save(user);
-//    }
     public boolean selectSeatToUser(ReservationRequestDto reservationRequestDto) {
         lock.lock();
         try {
+            log.info("update");
             Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
                     .orElseThrow(()-> new RuntimeException("Seat not found"));
 
@@ -65,18 +57,19 @@ public class ReservationService {
                 System.out.println("Seat not found");
                 return false;
             }
-            if(seat.isStatus()){
-                System.out.println("Seat already reserved");
+            if(seat.getStatus()){
                 return false;
             }
             User user = new User();
-            user.setUserName(reservationRequestDto.getUserName());
-            user.setNickName(reservationRequestDto.getNickName());
-            user.setPassword(reservationRequestDto.getPassword());
-            user.setHasReservation(true);
-            user.setSeat(seat);
-            seat.setStatus(true);
-
+            user.updateUser(
+                    reservationRequestDto.getUserName(),
+                    reservationRequestDto.getPassword(),
+                    reservationRequestDto.getNickName(),
+                    true,
+                    seat);
+            user.assignSeat(seat);
+            seat.updateSeat(seat.getSeatNo(), true);
+            seat.assignUser(user);
             userRepository.save(user);
             seatRepository.save(seat);
 
@@ -100,18 +93,17 @@ public class ReservationService {
         if(!user.getPassword().equals(reservationDeleteDto.getPassword())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"비밀번호를 확인해주세요.");
         }
-        if(!user.isHasReservation()){
+        if(!user.getHasReservation()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,"예약된 좌석이 없습니다.");
         }
         Seat seat = seatRepository.findById(user.getSeat().getId())
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
 
-        seat.setUser(null);
-        seat.setStatus(false);
+        seat.assignUser(null);
+        seat.updateSeat(seat.getSeatNo(),false);
         seatRepository.save(seat);
 
-        user.setHasReservation(false);
-        user.setSeat(null);
+        user.assignSeat(null);
         userRepository.save(user);
 
         return true;

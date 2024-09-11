@@ -16,8 +16,7 @@ public class SeatsInitailize {
     public void init(){
         for(long i = 1; i <= 30; i++){
             Seat seat = new Seat();
-            seat.setSeatNo(i);
-            seat.setStatus(false);
+            seat.updateSeat(i, false);
             seatRepository.save(seat);
         }
     }

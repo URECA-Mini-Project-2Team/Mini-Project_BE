@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -21,15 +22,8 @@ public class ReservationController {
     @GetMapping()
     public ResponseEntity<List<SeatDto>> getSeatList(){
         List<SeatDto> seats = reservationService.getAllSeats();
-        return new ResponseEntity<>(seats,HttpStatus.OK);
+        return ResponseEntity.ok(seats);
     }
-
-//    @PostMapping
-//    public ResponseEntity<String> submitUserInfo(@RequestBody UserInfoDto userInfoDto){
-//        reservationService.saveUser(userInfoDto);
-//        return new ResponseEntity<>("HTTP/1.1 200 OK", HttpStatus.OK);
-//    }
-
     @PatchMapping("/reservation")
     public ResponseEntity<String> reserveSeat(@RequestBody ReservationRequestDto reservationRequestDto) {
         boolean success = reservationService.selectSeatToUser(reservationRequestDto);
