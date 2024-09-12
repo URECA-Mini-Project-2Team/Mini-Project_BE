@@ -35,7 +35,7 @@ public class ReservationService {
         return seats.stream().map(seat -> {
             SeatDto dto = new SeatDto();
             dto.setSeatNo(seat.getSeatNo());
-            dto.setStatus(seat.getStatus());
+            dto.setStatus(seat.getUser().getHasReservation());
             if(seat.getUser() != null){
                 dto.setNickName(seat.getUser().getNickName());
                 dto.setUserName(seat.getUser().getUserName());
@@ -50,26 +50,19 @@ public class ReservationService {
             Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
                     .orElseThrow(()-> new RuntimeException("Seat not found"));
 
-//            if(seat == null || seat.isStatus()){
-//                return false;
-//            }
-            if(seat == null){
-                System.out.println("Seat not found");
+            if (seat.getUser() != null && seat.getUser().getHasReservation()) {
                 return false;
             }
-            if(seat.getStatus()){
-                return false;
-            }
+
             User user = new User();
             user.updateUser(
                     reservationRequestDto.getUserName(),
                     reservationRequestDto.getPassword(),
                     reservationRequestDto.getNickName(),
-                    true,
-                    seat);
+                    true
+            );
             user.assignSeat(seat);
-            seat.updateSeat(seat.getSeatNo(), true);
-            seat.assignUser(user);
+            seat.updateSeat(user);
             userRepository.save(user);
             seatRepository.save(seat);
 
@@ -99,11 +92,10 @@ public class ReservationService {
         Seat seat = seatRepository.findById(user.getSeat().getId())
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
 
-        seat.assignUser(null);
-        seat.updateSeat(seat.getSeatNo(),false);
+        seat.removeUser();
         seatRepository.save(seat);
 
-        user.assignSeat(null);
+        user.removeSeat();
         userRepository.save(user);
 
         return true;

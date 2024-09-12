@@ -15,18 +15,29 @@ public class Seat {
     @Column(nullable = false)
     private Long seatNo;
 
-    private Boolean status;
-
+    //연관관계 주인 Seat
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void updateSeat(Long seatNo, Boolean status){
+    public Seat(Long seatNo){
         this.seatNo = seatNo;
-        this.status = status;
     }
 
-    public void assignUser(User user){
+    public Seat() {
+
+    }
+
+    public void updateSeat(User user){
         this.user = user;
+        if(user != null){
+            user.assignSeat(this);
+        }
+    }
+    public void removeUser(){
+        if(user != null) {
+            user.removeSeat();
+            this.user = null;
+        }
     }
 }

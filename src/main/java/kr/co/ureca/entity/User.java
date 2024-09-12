@@ -22,20 +22,22 @@ public class User {
 
     private Boolean hasReservation;
 
-    @OneToOne
-    @JoinColumn(name = "seat_id")
+    @OneToOne(mappedBy = "user")
     private Seat seat;
 
-    public void updateUser(String userName, String password, String nickName, Boolean hasReservation, Seat seat){
+    public void updateUser(String userName, String password, String nickName, Boolean hasReservation){
         this.userName = userName;
         this.password = password;
         this.nickName = nickName;
         this.hasReservation = hasReservation;
-        this.seat = seat;
     }
 
     public void assignSeat(Seat seat){
         this.seat = seat;
         this.hasReservation = true;
+    }
+    public void removeSeat(){
+        this.seat = null;
+        this.hasReservation = false;
     }
 }

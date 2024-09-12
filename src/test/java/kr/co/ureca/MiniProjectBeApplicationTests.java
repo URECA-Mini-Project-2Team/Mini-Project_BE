@@ -34,7 +34,6 @@ class MiniProjectBeApplicationTests {
         ExecutorService executorService = Executors.newFixedThreadPool(thread);
         CountDownLatch lantch = new CountDownLatch(thread);
 
-//        Seat seat = (Seat) seatRepository.findBySeatNo("S1").orElseThrow(()-> new RuntimeException("Seat not found"));
         Seat seat = seatRepository.findById(1L).orElseThrow(() -> new RuntimeException("Seat not found"));
         for(int i = 0; i < thread; i++){
             int num = i;
@@ -62,7 +61,7 @@ class MiniProjectBeApplicationTests {
 
         Seat finalSeat = seatRepository.findById(seat.getId()).orElse(null);
         assert finalSeat != null;
-        assert finalSeat.getStatus();
+        assert finalSeat.getUser().getHasReservation();
         assert userRepository.count()==1;
 
     }
