@@ -2,27 +2,37 @@ package kr.co.ureca.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
-@Table(name = "userdb")
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
+@DynamicInsert
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "userid")
     private Long userId;
 
-    @Column(name = "username", nullable = false)
-    private String userName;
+    @Column(nullable = false)
+    private String name;
 
-    @Column(name = "nickname", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String nickName;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
+
+    @Builder.Default
+    @ColumnDefault("false")
+    @Column(nullable = false)
+    private Boolean status = false;
+
+    public void updateUserStatus () {
+        this.status = !this.status;
+    }
 
 }

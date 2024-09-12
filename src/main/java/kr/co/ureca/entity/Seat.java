@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "seatdb")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -13,13 +12,12 @@ public class Seat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seatid")
     private Long seatId;
 
-    @Column(name = "seatno", nullable = false)
+    @Column(nullable = false, unique = true)
     private Long seatNo;
 
-    @JoinColumn(name = "userid")
+    @JoinColumn(name = "userId")
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
 
