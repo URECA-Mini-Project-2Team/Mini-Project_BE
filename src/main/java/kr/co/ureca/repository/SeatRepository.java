@@ -1,14 +1,16 @@
 package kr.co.ureca.repository;
 
+import jakarta.persistence.LockModeType;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
 
-@Repository
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     Optional<Seat> findOpByUser(User user);
-    Seat findBySeatNo(Long seatNo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Seat> findOpBySeatNo(Long seatNo);
 }
