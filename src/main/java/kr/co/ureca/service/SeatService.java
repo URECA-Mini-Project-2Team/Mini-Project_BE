@@ -1,11 +1,10 @@
 package kr.co.ureca.service;
 
-import kr.co.ureca.dto.ReservationDto;
 import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +14,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class SeatService {
 
     private final SeatRepository seatRepository;
-
-
-    @Autowired
-    public SeatService(SeatRepository seatRepository) {
-        this.seatRepository = seatRepository;
-    }
 
     public List<SeatDto> getSeatList() {
         List<Seat> seats = seatRepository.findAll();
@@ -35,7 +29,7 @@ public class SeatService {
                                 .seatNo(seat.getSeatNo())
                                 .status(true)
                                 .nickName(user.getNickName())
-                                .userName(user.getUserName())
+                                .userName(user.getName())
                                 .build();
                     } else {
                         return SeatDto.builder()
@@ -48,14 +42,12 @@ public class SeatService {
                 }).collect(Collectors.toList());
     }
 
-//    @Transactional(isolation = Isolation.SERIALIZABLE)
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public Seat reservationSeat(ReservationDto reservationDto, User user) throws Exception {
-        Optional<Seat> seatOptional = seatRepository.findOpByUser(user);
-        if (seatOptional.isPresent()) {
-            throw new Exception("이미 등록된 자리가 있습니다.");
-        }
-        Seat seat = seatRepository.findBySeatNo(reservationDto.getSeatNo());
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Seat reservationSeat(Long seatNo, User user) throws Exception {
+        if (user.getStatus()) throw new Exception("이미 등록된 자리가 있습니다.");
+        Optional<Seat> seatOptional = seatRepository.findOpBySeatNo(seatNo);
+        if (seatOptional.isEmpty()) throw new Exception("존재하지 않은 자리입니다.");
+        Seat seat = seatOptional.get();
         if (seat.getUser() != null) throw new Exception("이미 예약된 좌석입니다.");
 
         seat.updateUser(user);
