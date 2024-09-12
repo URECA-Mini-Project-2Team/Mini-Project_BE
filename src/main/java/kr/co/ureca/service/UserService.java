@@ -49,4 +49,9 @@ public class UserService {
 
         return user;
     }
+
+    public void updateUserStatus(User user) {
+        user.updateUserStatus(user);
+        userRepository.save(user);
+    }
 }
