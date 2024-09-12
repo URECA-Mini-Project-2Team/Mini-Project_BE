@@ -1,8 +1,8 @@
 package kr.co.ureca.dto;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class UserDto {
 
     private String nickName;
