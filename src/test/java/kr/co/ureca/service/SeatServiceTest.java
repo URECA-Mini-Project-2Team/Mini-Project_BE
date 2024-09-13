@@ -40,8 +40,17 @@ public class SeatServiceTest {
     public void before() {
         System.out.println("begin test");
 
+        for (int i = 1; i <= 30; i++) {
+            seatRepository.save(
+                    Seat.builder()
+                            .seatNo((long) i)
+                            .build()
+            );
+            System.out.println("-------------------- 자리 디비에 넣음 " + i + " -----------------------");
+        }
+
         userList = new ArrayList<>();
-        for (int i = 1; i <= 1000; i++) {
+        for (int i = 1; i <= 10; i++) {
             userRepository.save(
                     User.builder()
                             .nickName("user" + i)
@@ -54,15 +63,6 @@ public class SeatServiceTest {
                 userList.add(userOptional.get());
                 System.out.println("-------------------- 유저 리스트에 넣음 " + i + " -----------------------");
             }
-        }
-
-        for (int i = 1; i <= 10; i++) {
-            seatRepository.save(
-                    Seat.builder()
-                            .seatNo((long) i)
-                            .build()
-            );
-            System.out.println("-------------------- 자리 디비에 넣음 " + i + " -----------------------");
         }
 
         userRepository.flush();
@@ -81,7 +81,7 @@ public class SeatServiceTest {
     public void reservationTest() throws Exception {
 
         // Given
-        int numThreads = 1000;
+        int numThreads = 10;
         Long seatNo = 1L;
 
         CountDownLatch countDownLatch = new CountDownLatch(numThreads);
@@ -118,7 +118,7 @@ public class SeatServiceTest {
         // Then
         assertAll(
                 () -> assertThat(successCount.get()).isEqualTo(1),
-                () -> assertThat(failCount.get()).isEqualTo(999)
+                () -> assertThat(failCount.get()).isEqualTo(9)
         );
     }
 

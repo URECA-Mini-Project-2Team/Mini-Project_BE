@@ -19,26 +19,16 @@ public class SeatService {
 
     private final SeatRepository seatRepository;
 
-    public List<SeatDto> getSeatList() {
+    public List<SeatDto.ResponseDto.SeatListDto> getSeatList() {
         List<Seat> seats = seatRepository.findAll();
         return seats.stream()
                 .map(seat -> {
-                    User user = seat.getUser();
-                    if (user != null) {
-                        return SeatDto.builder()
-                                .seatNo(seat.getSeatNo())
-                                .status(true)
-                                .nickName(user.getNickName())
-                                .userName(user.getName())
-                                .build();
-                    } else {
-                        return SeatDto.builder()
-                                .seatNo(seat.getSeatNo())
-                                .status(false)
-                                .nickName(null)
-                                .userName(null)
-                                .build();
-                    }
+                        User user = seat.getUser();
+                        if (user == null) {
+                            return SeatDto.ResponseDto.SeatListDto.of(seat.getSeatNo(), false, "", "");
+                        } else {
+                            return SeatDto.ResponseDto.SeatListDto.of(seat.getSeatNo(), true, user.getNickName(), user.getName());
+                        }
                 }).collect(Collectors.toList());
     }
 
