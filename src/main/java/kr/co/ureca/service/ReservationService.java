@@ -2,6 +2,7 @@ package kr.co.ureca.service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PessimisticLockException;
 import jakarta.transaction.Transactional;
 import kr.co.ureca.dto.DeleteReservationRequest;
 import kr.co.ureca.dto.ReservationRequest;
@@ -41,38 +42,41 @@ public class ReservationService {
 
     @Transactional
     public Seat reserve(ReservationRequest reservationRequest){
+        try {
+            Seat seat = seatRepository.findBySeatNo(reservationRequest.seatNo())
+                    .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 좌석입니다. 번호: " + reservationRequest.seatNo()));
 
-        Seat seat = seatRepository.findBySeatNo(reservationRequest.seatNo())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 좌석입니다. 번호: " + reservationRequest.seatNo()));
+            if (seat.getStatus().equals(true)) {
+                throw new CustomException(ErrorCode.RESERVED_SEAT, HttpStatus.BAD_REQUEST);
+            }
 
-        if (seat.getStatus().equals(true)){
-            throw new CustomException(ErrorCode.RESERVED_SEAT, HttpStatus.BAD_REQUEST);
+            User user = userRepository.findByNickName(reservationRequest.nickname())
+                    .orElseGet(() -> User.builder()
+                            .userName(reservationRequest.userName())
+                            .password(reservationRequest.password())
+                            .nickName(reservationRequest.nickname())
+                            .build()
+                    );
+            if (user.getHasReservation().equals(true)) {
+                throw new CustomException(ErrorCode.RESERVED_USER, HttpStatus.BAD_REQUEST);
+            }
+
+            user = user.toBuilder()
+                    .hasReservation(true)
+                    .build();
+
+            seat = seat.toBuilder()
+                    .user(user)
+                    .status(true)
+                    .build();
+
+            userRepository.save(user);
+            seatRepository.save(seat);
+
+            return seat;
+        }catch (PessimisticLockException e) {
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND, HttpStatus.BAD_REQUEST);
         }
-
-        User user = userRepository.findByNickName(reservationRequest.nickname())
-                .orElseGet(() -> User.builder()
-                        .userName(reservationRequest.userName())
-                        .password(reservationRequest.password())
-                        .nickName(reservationRequest.nickname())
-                        .build()
-                );
-        if(user.getHasReservation().equals(true)){
-            throw new CustomException(ErrorCode.RESERVED_USER, HttpStatus.BAD_REQUEST);
-        }
-
-        user = user.toBuilder()
-                .hasReservation(true)
-                .build();
-
-        seat = seat.toBuilder()
-                .user(user)
-                .status(true)
-                .build();
-
-        userRepository.save(user);
-        seatRepository.save(seat);
-
-        return seat;
 
     }
 
