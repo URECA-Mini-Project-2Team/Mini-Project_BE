@@ -1,10 +1,10 @@
-package kr.co.ureca;
+package kr.co.ureca.service;
 
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import kr.co.ureca.dto.ReservationRequest;
 import kr.co.ureca.entity.Seat;
-import kr.co.ureca.repository.SeatRepository;
-import kr.co.ureca.repository.UserRepository;
-import kr.co.ureca.service.ReservationService;
+import kr.co.ureca.exception.CustomException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class ReservationConcurrencyTest {
     @Transactional
     public void testConcurrentReservations() throws InterruptedException, ExecutionException {
         // 같은 좌석 번호를 10명이 동시에 예약하는 상황을 시뮬레이션
-        int numberOfThreads = 10;
+        final int numberOfThreads = 10;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         List<Callable<String>> tasks = new ArrayList<>();
 
@@ -52,9 +52,9 @@ public class ReservationConcurrencyTest {
                     Seat seat = reservationService.reserve(request);
                     log.info("Success for user {}", userIndex);
                     return "Success";
-                } catch (Exception e) {
+                } catch (CustomException e) {
                     log.error("Failed for user {}: {}", userIndex, e.getMessage());
-                    return "Failed";
+                    return "CustomException: " + e.getMessage();
                 }
             });
         }
@@ -65,6 +65,8 @@ public class ReservationConcurrencyTest {
         // 결과 확인
         int successCount = 0;
         int failureCount = 0;
+        int customExceptionCount = 0;
+
 
         for (Future<String> result : results) {
             String res = result.get();
@@ -72,6 +74,9 @@ public class ReservationConcurrencyTest {
                 successCount++;
             } else {
                 failureCount++;
+                if (res.startsWith("CustomException")) {
+                    customExceptionCount++;
+                }
             }
             System.out.println(res);
         }
@@ -79,6 +84,7 @@ public class ReservationConcurrencyTest {
         // 동시성 테스트 결과 검증: 하나의 성공, 나머지 9개는 실패해야 함
         assertEquals(1, successCount);
         assertEquals(9, failureCount);
+        assertEquals(9, customExceptionCount);
 
         executorService.shutdown();
     }
