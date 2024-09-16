@@ -1,11 +1,12 @@
 package kr.co.ureca.service;
 
-import jakarta.transaction.Transactional;
 import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -19,8 +20,8 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Transactional
-    public User checkExistOrNot(SeatDto.RequestDto.ReservationDto reservationDto) throws Exception {
+    @Transactional(propagation = Propagation.REQUIRED)
+    public User checkUserExistOrNot(SeatDto.RequestDto.ReservationDto reservationDto) throws Exception {
         User user = userRepository.findOpByNickName(reservationDto.getNickName())
                 .orElseGet(()-> createUser(reservationDto));
         if (!user.getName().equals(reservationDto.getUserName())) throw  new Exception("이미 사용중인 아이디입니다.");
@@ -29,7 +30,7 @@ public class UserService {
         return user;
     }
 
-    public User checkExistOrNot(SeatDto.RequestDto.DeleteDto deleteDto) throws Exception {
+    public User checkUserExistOrNot(SeatDto.RequestDto.DeleteDto deleteDto) throws Exception {
         Optional<User> optionalUser = userRepository.findOpByNickName(deleteDto.getNickName());
         if (optionalUser.isEmpty()) throw new Exception("등록되지 않은 사용자입니다.");
         User user = optionalUser.get();
@@ -38,10 +39,9 @@ public class UserService {
         return user;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public void updateUserStatus(User user) {
         user.updateUserStatus();
-//        userRepository.save(user);
     }
 
     public User createUser(SeatDto.RequestDto.ReservationDto reservationDto){

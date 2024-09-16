@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     Optional<Seat> findOpByUser(User user);
 
-    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Seat> findOpBySeatNo(Long seatNo);
 }

@@ -54,6 +54,14 @@ public class SeatDto {
             @NotBlank
             private Long seatNo;
 
+            public static ReservationDto of(Long seatNo, String userName, String nickName, String password) {
+                return ReservationDto.builder()
+                        .seatNo(seatNo)
+                        .userName(userName)
+                        .nickName(nickName)
+                        .password(password)
+                        .build();
+            }
         }
 
         @Getter
