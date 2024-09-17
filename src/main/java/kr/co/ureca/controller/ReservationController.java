@@ -46,9 +46,6 @@ public class ReservationController {
         }
     }
 
-//    @GetMapping("/test")
-//    public ResponseEntity<String> test() {
-//        return new ResponseEntity<>("Test successful", HttpStatus.OK);
-//    }
-
+//    @PostMapping("/register")
+//    public SignInResultDto signIn
 }

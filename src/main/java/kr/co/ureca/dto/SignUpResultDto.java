@@ -1,12 +1,15 @@
 package kr.co.ureca.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class ReservationRequestDto {
+@NoArgsConstructor
+@AllArgsConstructor
+public class SignUpResultDto {
 
     private String userName;
     private String nickName;
     private String password;
-    private Long seatNo;
 }

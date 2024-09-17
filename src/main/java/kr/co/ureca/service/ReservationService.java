@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-
 public class ReservationService {
 
 
@@ -35,10 +34,11 @@ public class ReservationService {
         return seats.stream().map(seat -> {
             SeatDto dto = new SeatDto();
             dto.setSeatNo(seat.getSeatNo());
-            dto.setStatus(seat.getUser().getHasReservation());
+            dto.setStatus(false);
             if(seat.getUser() != null){
                 dto.setNickName(seat.getUser().getNickName());
                 dto.setUserName(seat.getUser().getUserName());
+                dto.setStatus(true);
             }
             return dto;
         }).collect(Collectors.toList());
@@ -50,7 +50,7 @@ public class ReservationService {
             Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
                     .orElseThrow(()-> new RuntimeException("Seat not found"));
 
-            if (seat.getUser() != null && seat.getUser().getHasReservation()) {
+            if (seat.getUser() != null && seat.getUser().getStatus()) {
                 return false;
             }
 
@@ -86,7 +86,7 @@ public class ReservationService {
         if(!user.getPassword().equals(reservationDeleteDto.getPassword())){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"비밀번호를 확인해주세요.");
         }
-        if(!user.getHasReservation()){
+        if(!user.getStatus()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,"예약된 좌석이 없습니다.");
         }
         Seat seat = seatRepository.findById(user.getSeat().getId())
