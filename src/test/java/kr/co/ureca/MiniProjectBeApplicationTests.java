@@ -5,14 +5,9 @@ import kr.co.ureca.entity.Seat;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import kr.co.ureca.service.ReservationService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -61,7 +56,7 @@ class MiniProjectBeApplicationTests {
 
         Seat finalSeat = seatRepository.findById(seat.getId()).orElse(null);
         assert finalSeat != null;
-        assert finalSeat.getUser().getHasReservation();
+        assert finalSeat.getUser().getStatus();
         assert userRepository.count()==1;
 
     }

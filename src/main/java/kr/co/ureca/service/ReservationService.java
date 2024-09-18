@@ -1,5 +1,6 @@
 package kr.co.ureca.service;
 
+import kr.co.ureca.dto.CustomeUserDetails;
 import kr.co.ureca.dto.ReservationDeleteDto;
 import kr.co.ureca.dto.ReservationRequestDto;
 import kr.co.ureca.dto.SeatDto;
@@ -10,6 +11,10 @@ import kr.co.ureca.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
@@ -25,6 +30,7 @@ public class ReservationService {
 
     private final UserRepository userRepository;
     private final SeatRepository seatRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -43,52 +49,57 @@ public class ReservationService {
             return dto;
         }).collect(Collectors.toList());
     }
-    public boolean selectSeatToUser(ReservationRequestDto reservationRequestDto) {
+    public boolean selectSeatToUser(Long seatNo) {
+        System.out.println("Attempting to reserve seat with ID: " + seatNo);
         lock.lock();
         try {
-            log.info("update");
-            Seat seat = seatRepository.findById(reservationRequestDto.getSeatNo())
-                    .orElseThrow(()-> new RuntimeException("Seat not found"));
+            Seat seat = seatRepository.findById(seatNo)
+                    .orElseThrow(() -> new RuntimeException("Seat not found"));
 
             if (seat.getUser() != null && seat.getUser().getStatus()) {
-                return false;
+                System.out.println("User already has a reserved seat.");
+                throw new RuntimeException("이미 예약된 좌석이 있습니다. 취소 후 이용해주세요.");
             }
 
-            User user = new User();
-            user.updateUser(
-                    reservationRequestDto.getUserName(),
-                    reservationRequestDto.getPassword(),
-                    reservationRequestDto.getNickName(),
-                    true
-            );
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userName = authentication.getName();
+
+            User user = userRepository.findByUserName(userName);
+            if (user == null) {
+                throw new UsernameNotFoundException("User not found with username: " + userName);
+            }
+
             user.assignSeat(seat);
             seat.updateSeat(user);
+
             userRepository.save(user);
             seatRepository.save(seat);
 
+            System.out.println("Seat reservation successful for user: " + userName);
             return true;
+        } catch (Exception e) {
+            System.out.println("Error during seat reservation: " + e.getMessage());
+            return false;
         } finally {
             lock.unlock();
         }
-
     }
-
     public boolean deleteSeat(ReservationDeleteDto reservationDeleteDto) throws Exception {
-        /*
-        예약된 좌석을 클릭했을 때, 사용자 정보 일부를 입력 받아 해당 좌석의 예약자와 일치 여부를 판단
-        -> 일치하면 예약 취소
-        -> 일치하지 않으면 --
-         */
         Optional<User> userOpt = userRepository.findByNickName(reservationDeleteDto.getNickName());
-        if(userOpt.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "등록된 유저가 아닙니다.");
+        if (userOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "등록된 유저가 아닙니다.");
+        }
 
         User user = userOpt.get();
-        if(!user.getPassword().equals(reservationDeleteDto.getPassword())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"비밀번호를 확인해주세요.");
+        System.out.println(user);
+        // 암호화된 비밀번호 비교
+        if (!passwordEncoder.matches(reservationDeleteDto.getPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호를 확인해주세요.");
         }
-        if(!user.getStatus()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"예약된 좌석이 없습니다.");
+        if (!user.getStatus()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "예약된 좌석이 없습니다.");
         }
+
         Seat seat = seatRepository.findById(user.getSeat().getId())
                 .orElseThrow(() -> new RuntimeException("Seat not found"));
 
@@ -99,6 +110,5 @@ public class ReservationService {
         userRepository.save(user);
 
         return true;
-
     }
 }

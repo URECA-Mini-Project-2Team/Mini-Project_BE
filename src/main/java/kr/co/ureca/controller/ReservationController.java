@@ -1,7 +1,7 @@
 package kr.co.ureca.controller;
 
 import kr.co.ureca.dto.ReservationDeleteDto;
-import kr.co.ureca.dto.ReservationRequestDto;
+import kr.co.ureca.dto.ReservationSeatsDto;
 import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,13 +26,17 @@ public class ReservationController {
         return ResponseEntity.ok(seats);
     }
     @PatchMapping("/reservation")
-    public ResponseEntity<String> reserveSeat(@RequestBody ReservationRequestDto reservationRequestDto) {
-        boolean success = reservationService.selectSeatToUser(reservationRequestDto);
-
-        if (success) {
-            return new ResponseEntity<>("OK",HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Failed", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> reserveSeat(@RequestBody Map<String, Long> request) {
+        Long seatNo = request.get("seatNo");
+        System.out.println(seatNo);
+        if(seatNo == null){
+            return ResponseEntity.badRequest().body("Seat number is missing");
+        }
+        boolean success = reservationService.selectSeatToUser(seatNo);
+        if(success){
+            return ResponseEntity.ok().body("Reservation successful");
+        }else{
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Seat is already reservation or occupied");
         }
     }
 
@@ -46,6 +51,4 @@ public class ReservationController {
         }
     }
 
-//    @PostMapping("/register")
-//    public SignInResultDto signIn
 }
