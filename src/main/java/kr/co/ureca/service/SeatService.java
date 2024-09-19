@@ -39,7 +39,6 @@ public class SeatService {
         if (user.getStatus()) throw new Exception("이미 등록된 자리가 있습니다.");
         seat.updateUser(user);
         seatRepository.save(seat);
-
         return seat;
     }
 
