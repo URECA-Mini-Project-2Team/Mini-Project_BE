@@ -31,8 +31,17 @@ public class User {
     @Column(nullable = false)
     private Boolean status = false;
 
-    public void updateUserStatus () {
+    public void updateUserStatus() {
         this.status = !this.status;
     }
+
+    public static User createUser(String name, String nickName, String password) {
+        return User.builder()
+                .name(name)
+                .nickName(nickName)
+                .password(password)
+                .build();
+    }
+
 
 }

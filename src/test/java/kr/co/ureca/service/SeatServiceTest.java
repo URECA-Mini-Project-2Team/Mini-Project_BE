@@ -1,7 +1,7 @@
 package kr.co.ureca.service;
 
+import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.entity.Seat;
-import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import org.junit.jupiter.api.*;
@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,36 +26,21 @@ public class SeatServiceTest {
     private UserRepository userRepository;
 
     @Autowired
-    private SeatService seatService;
-
-    @Autowired
-    private UserService userService;
-    @Autowired
     private SeatRepository seatRepository;
 
-    private List<User> userList;
+    @Autowired
+    private ReservationService reservationService;
+
+    private List<SeatDto.RequestDto.ReservationDto> reservationDtoList;
+
+    @Autowired
+    private SeatService seatService;
 
     @BeforeEach
     public void before() {
         System.out.println("begin test");
 
-        userList = new ArrayList<>();
-        for (int i = 1; i <= 1000; i++) {
-            userRepository.save(
-                    User.builder()
-                            .nickName("user" + i)
-                            .name("유저" + i)
-                            .password("1234")
-                            .build()
-            );
-            Optional<User> userOptional = userRepository.findById((long) i);
-            if (userOptional.isPresent()) {
-                userList.add(userOptional.get());
-                System.out.println("-------------------- 유저 리스트에 넣음 " + i + " -----------------------");
-            }
-        }
-
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 1; i++) {
             seatRepository.save(
                     Seat.builder()
                             .seatNo((long) i)
@@ -65,7 +49,13 @@ public class SeatServiceTest {
             System.out.println("-------------------- 자리 디비에 넣음 " + i + " -----------------------");
         }
 
-        userRepository.flush();
+        reservationDtoList = new ArrayList<>();
+        for (int i = 1; i <= 80; i++) {
+            reservationDtoList.add(
+                    SeatDto.RequestDto.ReservationDto.of(1L, "유저" + i, "user" + i, "1234")
+            );
+        }
+
         seatRepository.flush();
 
         System.out.println("================= Data Upload Success ====================");
@@ -81,28 +71,41 @@ public class SeatServiceTest {
     public void reservationTest() throws Exception {
 
         // Given
-        int numThreads = 1000;
+        int numThreads = 80;
         Long seatNo = 1L;
+        Seat seat = seatRepository.findById(seatNo).get();
 
         CountDownLatch countDownLatch = new CountDownLatch(numThreads);
-        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+//        ExecutorService executorService = Executors.newFixedThreadPool(numThreads); // 정적
+        ExecutorService executorService = Executors.newCachedThreadPool(); // 동적
 
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failCount = new AtomicInteger();
+        AtomicInteger reservationSuccessCount = new AtomicInteger();
+        AtomicInteger reservationFailCount = new AtomicInteger();
+        AtomicInteger querySuccessCount = new AtomicInteger();
+        AtomicInteger queryFailCount = new AtomicInteger();
+        AtomicInteger threadNum = new AtomicInteger();
 
 //       When
         for (int i = 0; i < numThreads; i++) {
             int finalI = i;
             executorService.execute(() -> {
                 try {
-                    User user = userList.get(finalI);
 
-                    seatService.reservationSeat(seatNo, user);//userList.get(finalI));
-                    userService.updateUserStatus(user);
-                    successCount.incrementAndGet();
+                    if (finalI % 2 == 0) {
+                        SeatDto.RequestDto.ReservationDto reservationDto = reservationDtoList.get(finalI);
+                        reservationService.reservationSeat(reservationDto);
+                        threadNum.set(finalI);
+                        reservationSuccessCount.incrementAndGet();
+                    } else {
+                        List<SeatDto.ResponseDto.SeatListDto> list = seatService.getSeatList();
+                        System.out.println("----- 조회 쓰레드 번호 : " + finalI + " 자리 번호 : " + list.get(0).getSeatNo() + ", 자리 상태 : " + list.get(0).getStatus());
+                        querySuccessCount.incrementAndGet();
+                    }
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
-                    failCount.getAndIncrement();
+                    if (finalI % 2 == 0) {
+                        reservationFailCount.incrementAndGet();
+                    } else queryFailCount.incrementAndGet();
                 } finally {
                     countDownLatch.countDown();
                 }
@@ -111,15 +114,20 @@ public class SeatServiceTest {
 
         countDownLatch.await();
         executorService.shutdown();
-
-        System.out.println("success count : " + successCount.get());
-        System.out.println("fail count : " + failCount.get());
-
         // Then
+
+        System.out.println("예약 성공 쓰레드 번호 : " + threadNum);
+
+        System.out.println("예약 성공 count : " + reservationSuccessCount.get());
+        System.out.println("예약 실패 count : " + reservationFailCount.get());
+        System.out.println("조회 성공 count : " + querySuccessCount.get());
+        System.out.println("조회 실패 count : " + queryFailCount.get());
+
         assertAll(
-                () -> assertThat(successCount.get()).isEqualTo(1),
-                () -> assertThat(failCount.get()).isEqualTo(999)
+                () -> assertThat(reservationSuccessCount.get()).isEqualTo(1),
+                () -> assertThat(reservationFailCount.get()).isEqualTo(39),
+                () -> assertThat(querySuccessCount.get()).isEqualTo(40),
+                () -> assertThat(queryFailCount.get()).isEqualTo(0)
         );
     }
-
 }
