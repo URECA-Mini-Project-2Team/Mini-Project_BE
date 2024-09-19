@@ -34,17 +34,6 @@ public class UserService {
         if (userOpt.isEmpty()) throw new UsernameNotFoundException("User not found with username: " + userName);
         return userOpt.get();
     }
-//    @Transactional(propagation = Propagation.REQUIRED)
-//    public User checkUserExistOrNot(SeatDto.RequestDto.ReservationDto reservationDto) throws Exception {
-//        Optional<User> userOpt = userRepository.findOpByNickName(reservationDto.getNickName());
-//        if(userOpt.isEmpty()) throw new UsernameNotFoundException("User not found with userNickName");
-//
-//        User user = userOpt.get();
-//        if (!user.getName().equals(reservationDto.getUserName())) throw  new Exception("이미 사용중인 아이디입니다.");
-//        if (!user.getPassword().equals(reservationDto.getPassword())) throw new Exception("비밀번호가 틀렸습니다.");
-//
-//        return user;
-//    }
 
     public User checkUserExistOrNot(SeatDto.RequestDto.DeleteDto deleteDto) throws Exception {
         Optional<User> optionalUser = userRepository.findOpByNickName(deleteDto.getNickName());

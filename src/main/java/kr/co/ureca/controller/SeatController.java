@@ -40,10 +40,10 @@ public class SeatController {
     }
 
     @PatchMapping("/delete")
-    public ResponseEntity<Void> deleteSeat(@RequestBody SeatDto.RequestDto.DeleteDto deleteDto) throws Exception {
-        User user = userService.checkUserExistOrNot(deleteDto);
-        seatService.deleteSeat(user);
-        userService.updateUserStatus(user);
+    public ResponseEntity<Void> deleteSeat() throws Exception {
+//        User user = userService.checkUserExistOrNot(deleteDto);
+        seatService.deleteSeat();
+//        userService.updateUserStatus(user);
         return ResponseEntity.ok().build();
     }
 }

@@ -4,7 +4,11 @@ import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.entity.Seat;
 import kr.co.ureca.entity.User;
 import kr.co.ureca.repository.SeatRepository;
+import kr.co.ureca.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -19,6 +23,8 @@ import java.util.stream.Collectors;
 public class SeatService {
 
     private final SeatRepository seatRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRES_NEW)
     public List<SeatDto.ResponseDto.SeatListDto> getSeatList() {
@@ -42,7 +48,19 @@ public class SeatService {
         return seat;
     }
 
-    public Seat deleteSeat(User user) throws Exception {
+    public Seat deleteSeat() throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userName = authentication.getName();
+
+        Optional<User> userOpt = userRepository.findByName(userName);
+        if(userOpt.isEmpty()){
+            throw new Exception("등록되지 않은 사용자입니다.");
+        }
+        User user = userOpt.get();
+        if(!user.getStatus()){
+            throw new Exception("예약된 좌석이 없습니다.");
+        }
+
         Optional<Seat> seatOptional = seatRepository.findOpByUser(user);
 
         if (seatOptional.isPresent()) {
@@ -50,10 +68,24 @@ public class SeatService {
             seat.updateUser(null);
             seatRepository.save(seat);
 
+            userService.updateUserStatus(user);
+
             return seat;
         }
         else throw new Exception("등록된 자리가 없습니다.");
     }
+//    public Seat deleteSeat(User user) throws Exception {
+//        Optional<Seat> seatOptional = seatRepository.findOpByUser(user);
+//
+//        if (seatOptional.isPresent()) {
+//            Seat seat = seatOptional.get();
+//            seat.updateUser(null);
+//            seatRepository.save(seat);
+//
+//            return seat;
+//        }
+//        else throw new Exception("등록된 자리가 없습니다.");
+//    }
 
     @Transactional(propagation = Propagation.REQUIRED)
     public Seat checkSeatExistsOrNot(Long seatNo) throws Exception {

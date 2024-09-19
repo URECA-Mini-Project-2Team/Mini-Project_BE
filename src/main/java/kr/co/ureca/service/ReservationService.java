@@ -20,7 +20,6 @@ public class ReservationService {
 
     private final SeatService seatService;
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRES_NEW)
     public void reservationSeat(SeatDto.RequestDto.ReservationDto reservationDto) throws Exception {
