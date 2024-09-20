@@ -20,6 +20,9 @@ public class Seat {
     @JoinColumn(name = "userId")
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
+    public Seat(Long seatNo){
+        this.seatNo = seatNo;
+    }
 
     public void updateUser(User user) {
         this.user = user;
