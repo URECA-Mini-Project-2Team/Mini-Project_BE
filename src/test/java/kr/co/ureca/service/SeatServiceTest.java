@@ -2,11 +2,16 @@ package kr.co.ureca.service;
 
 import kr.co.ureca.dto.SeatDto;
 import kr.co.ureca.entity.Seat;
+import kr.co.ureca.entity.User;
+import kr.co.ureca.jwt.JWTUtil;
 import kr.co.ureca.repository.SeatRepository;
 import kr.co.ureca.repository.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 //@Transactional
 public class SeatServiceTest {
 
@@ -36,23 +42,31 @@ public class SeatServiceTest {
     @Autowired
     private SeatService seatService;
 
+    private List<String> jwtTokenList;
+
+    @Autowired
+    private JWTUtil jwtUtil;
+
     @BeforeEach
-    public void before() {
+    public void before() throws Exception {
         System.out.println("begin test");
 
-        for (int i = 1; i <= 1; i++) {
-            seatRepository.save(
-                    Seat.builder()
-                            .seatNo((long) i)
-                            .build()
-            );
-            System.out.println("-------------------- 자리 디비에 넣음 " + i + " -----------------------");
-        }
-
         reservationDtoList = new ArrayList<>();
+        jwtTokenList = new ArrayList<>();
+
         for (int i = 1; i <= 80; i++) {
+            String userName = "유저" + i;
+            String password = "1234";
+            String nickName = "user" + i;
+
+            User user = User.createUser(userName, nickName, password);
+            userRepository.save(user);
+
+            String jwtToken = jwtUtil.createJwt(user.getName(), 3600000L);
+            jwtTokenList.add(jwtToken);
+
             reservationDtoList.add(
-                    SeatDto.RequestDto.ReservationDto.of(1L, "유저" + i, "user" + i, "1234")
+                    SeatDto.RequestDto.ReservationDto.of(1L, userName, nickName, password)
             );
         }
 
@@ -92,6 +106,11 @@ public class SeatServiceTest {
                 try {
 
                     if (finalI % 2 == 0) {
+                        String jwtToken = jwtTokenList.get(finalI);
+                        SecurityContextHolder.getContext().setAuthentication(
+                                new UsernamePasswordAuthenticationToken(jwtUtil.getUsername(jwtToken), null, null)
+                        );
+
                         SeatDto.RequestDto.ReservationDto reservationDto = reservationDtoList.get(finalI);
                         reservationService.reservationSeat(reservationDto);
                         threadNum.set(finalI);
